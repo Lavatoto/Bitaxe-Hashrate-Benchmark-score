@@ -46,7 +46,7 @@ max_vr_temp = 90  # Maximum allowed voltage regulator temperature
 # Global variables for score calculation
 min_temp = 25  # Minimum acceptable temperature
 min_hashrate = 0  # Theoretical minimum hashrate
-max_hashrate = 2000  # Theoretical maximum hashrate
+max_hashrate = 2500  # Theoretical maximum hashrate
 min_efficiency = 10  # Minimum efficiency
 max_efficiency = 100  # Maximum efficiency
 
@@ -240,17 +240,20 @@ def benchmark_iteration(core_voltage, frequency):
         # Calculate if hashrate is within 8% of expected
         hashrate_within_tolerance = (average_hashrate >= expected_hashrate * 0.92)
         
+        # Calculate a score based on hashrate, temperature and efficiency
+        score = (average_hashrate * 10) - (average_temperature * 2) - (efficiency_jth * 0.5)
+        
+        # Apply scaling to normalize the score to 1000
+        normalized_score = score / (max_hashrate * 10 + max_temp * 2 + max_efficiency * 0.5) * 1000  
+        
+              
         print(GREEN + f"Average Hashrate: {average_hashrate:.2f} GH/s (Expected: {expected_hashrate:.2f} GH/s)" + RESET)
         print(GREEN + f"Average Temperature: {average_temperature:.2f}°C" + RESET)
         print(GREEN + f"Efficiency: {efficiency_jth:.2f} J/TH" + RESET)
         print(GREEN + f"Normalized Score: {normalized_score:.2f}/1000" + RESET)
 
         
-        # Calculate a score based on hashrate, temperature and efficiency
-        score = (average_hashrate * 10) - (average_temperature * 2) - (efficiency_jth * 0.5)
-        
-        # Apply scaling to normalize the score to 1000
-        normalized_score = score / (max_hashrate * 10 + max_temp * 2 + max_efficiency * 0.5) * 1000
+
 
         
         return average_hashrate, average_temperature, efficiency_jth, hashrate_within_tolerance, score
@@ -262,7 +265,7 @@ def save_results():
     try:
         # Extract IP from bitaxe_ip global variable and remove 'http://'
         ip_address = bitaxe_ip.replace('http://', '')
-        filename = f"bitaxe_benchmark_results_{ip_address}.json"
+        filename = f"bitaxe_benchmark_score_results_{ip_address}.json"
         with open(filename, "w") as f:
             json.dump(results, f, indent=4)
         print(GREEN + f"Results saved to {filename}" + RESET)
