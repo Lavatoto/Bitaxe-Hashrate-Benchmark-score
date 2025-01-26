@@ -1,3 +1,42 @@
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+# Explanation of Changes Made to the Script
+In this updated version of the script, several improvements were made to enhance the analysis of the Bitaxe's performance based on three key metrics: hashrate, temperature, and power consumption. Below is a summary of the main changes:
+
+Score Calculation and Normalization: I added a feature to calculate a performance score for each voltage and frequency configuration. This score takes into account three main factors:
+
+Average hashrate: The number of gigahashes per second (GH/s) produced by the machine.
+Average temperature: The operating temperature of the system, which should stay within safe limits.
+Energy efficiency: The amount of power consumed per tera-hash (J/TH), which is a crucial metric for evaluating power efficiency.
+The score is calculated using the following formula:
+
+```bash
+score = (average_hashrate * 10) - (average_temperature * 2) - (efficiency_jth * 0.5)
+```
+This score prioritizes the hashrate, while penalizing high temperatures and low energy efficiency. The higher the score, the better the configuration performs.
+
+Score Normalization: To make the scores comparable across different configurations, I added a normalization process. The score is now adjusted on a scale of 0 to 1000, allowing a relative evaluation of the best configurations:
+
+```bash
+normalized_score = score / (max_hashrate * 10 + max_temp * 2 + max_efficiency * 0.5) * 1000
+```
+This ensures a consistent scale where 1000 represents the best possible performance, based on the theoretical limits of the tested parameters (hashrate, temperature, and efficiency).
+
+Ranking of Results: After the tests are complete, I implemented a ranking function based on the average hashrate, temperature, and efficiency. 
+The top 5 configurations are extracted and displayed based on their normalized score. The ranking is done by sorting the results by average hashrate (from highest to lowest), making it easier to identify the best-performing configurations.
+
+Displaying Results: The results are displayed in a detailed table, including:
+
+The voltage and frequency of each tested configuration.
+The average hashrate, average temperature, and energy efficiency.
+The normalized score out of 1000, providing a quick visual reference for the relative performance of each configuration.
+Additionally, the results are saved in a JSON file, allowing for historical tracking of the tests performed.
+
+Conclusion
+These modifications add an extra layer to the analysis of Bitaxe performance. Not only do they provide raw results for each configuration, but they also offer a ranking system based on key criteria like power consumption and thermal stability. With these improvements, it's easier to identify the optimal configuration for a balance between performance and energy efficiency.
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+
 # Bitaxe Hashrate Benchmark
 
 A Python-based benchmarking tool for optimizing Bitaxe mining performance by testing different voltage and frequency combinations while monitoring hashrate, temperature, and power efficiency.
