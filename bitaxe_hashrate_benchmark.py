@@ -43,6 +43,13 @@ max_allowed_voltage = 1400
 max_allowed_frequency = 1200
 max_vr_temp = 90  # Maximum allowed voltage regulator temperature
 
+# Global variables for score calculation
+min_temp = 25  # Minimum acceptable temperature
+min_hashrate = 0  # Theoretical minimum hashrate
+max_hashrate = 5000  # Theoretical maximum hashrate
+min_efficiency = 10  # Minimum efficiency
+max_efficiency = 100  # Maximum efficiency
+
 # Add these variables to the global configuration section
 small_core_count = None
 asic_count = None
@@ -236,11 +243,20 @@ def benchmark_iteration(core_voltage, frequency):
         print(GREEN + f"Average Hashrate: {average_hashrate:.2f} GH/s (Expected: {expected_hashrate:.2f} GH/s)" + RESET)
         print(GREEN + f"Average Temperature: {average_temperature:.2f}°C" + RESET)
         print(GREEN + f"Efficiency: {efficiency_jth:.2f} J/TH" + RESET)
+        print(GREEN + f"Normalized Score: {normalized_score:.2f}/1000" + RESET)
+
         
-        return average_hashrate, average_temperature, efficiency_jth, hashrate_within_tolerance
+        # Calculate a score based on hashrate, temperature and efficiency
+        score = (average_hashrate * 10) - (average_temperature * 2) - (efficiency_jth * 0.5)
+        
+        # Apply scaling to normalize the score to 1000
+        normalized_score = score / (max_hashrate * 10 + max_temp * 2 + max_efficiency * 0.5) * 1000
+
+        
+        return average_hashrate, average_temperature, efficiency_jth, hashrate_within_tolerance, score
     else:
         print(YELLOW + "No Hashrate or Temperature or Watts data collected." + RESET)
-        return None, None, None, False
+        return None, None, None, False, None
 
 def save_results():
     try:
@@ -258,7 +274,7 @@ def reset_to_best_setting():
         print(YELLOW + "No valid benchmarking results found. Applying predefined default settings." + RESET)
         set_system_settings(default_voltage, default_frequency)
     else:
-        best_result = sorted(results, key=lambda x: x["averageHashRate"], reverse=True)[0]
+        best_result = sorted(results, key=lambda x: x["score"], reverse=True)[0]
         best_voltage = best_result["coreVoltage"]
         best_frequency = best_result["frequency"]
 
@@ -286,7 +302,7 @@ try:
     
     while current_voltage <= max_allowed_voltage and current_frequency <= max_allowed_frequency:
         set_system_settings(current_voltage, current_frequency)
-        avg_hashrate, avg_temp, efficiency_jth, hashrate_ok = benchmark_iteration(current_voltage, current_frequency)
+        avg_hashrate, avg_temp, efficiency_jth, hashrate_ok, score = benchmark_iteration(current_voltage, current_frequency)
         
         if avg_hashrate is not None and avg_temp is not None and efficiency_jth is not None:
             results.append({
@@ -294,7 +310,8 @@ try:
                 "frequency": current_frequency,
                 "averageHashRate": avg_hashrate,
                 "averageTemperature": avg_temp,
-                "efficiencyJTH": efficiency_jth
+                "efficiencyJTH": efficiency_jth,
+                "score": score
             })
             
             if hashrate_ok:
@@ -362,7 +379,7 @@ finally:
         
         # Save the final data to JSON
         ip_address = bitaxe_ip.replace('http://', '')
-        filename = f"bitaxe_benchmark_results_{ip_address}.json"
+        filename = f"bitaxe_benchmark_score_results_{ip_address}.json"
         with open(filename, "w") as f:
             json.dump(final_data, f, indent=4)
         
@@ -376,5 +393,7 @@ finally:
                 print(GREEN + f"  Average Hashrate: {result['averageHashRate']:.2f} GH/s" + RESET)
                 print(GREEN + f"  Average Temperature: {result['averageTemperature']:.2f}°C" + RESET)
                 print(GREEN + f"  Efficiency: {result['efficiencyJTH']:.2f} J/TH" + RESET)
+                print(GREEN + f"  Score: {result['score']:.2f}" + RESET)
         else:
             print(RED + "No valid results were found during benchmarking." + RESET)
+
