@@ -13,7 +13,7 @@ The score is calculated using the following formula:
 ```bash
 score = (average_hashrate * 10) - (average_temperature * 2) - (efficiency_jth * 0.5)
 ```
-This score prioritizes the hashrate, while penalizing high temperatures and low energy efficiency. The higher the score, the better the configuration performs.
+This score prioritizes the hashrate, while penalizing high temperatures and poor energy efficiency. The higher the score, the better the configuration performs
 
 Score Normalization: To make the scores comparable across different configurations, I added a normalization process. The score is now adjusted on a scale of 0 to 1000, allowing a relative evaluation of the best configurations:
 
