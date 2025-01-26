@@ -20,7 +20,7 @@ Score Normalization: To make the scores comparable across different configuratio
 ```bash
 normalized_score = score / (max_hashrate * 10 + max_temp * 2 + max_efficiency * 0.5) * 1000
 ```
-This ensures a consistent scale where 1000 represents the best possible performance, based on the theoretical limits of the tested parameters (hashrate, temperature, and efficiency).
+In this calculation, the maximum hashrate is set to 2000 GH/s, a value that is extremely difficult to achieve in practice. This ensures that the normalized score provides a meaningful benchmark, with 1000 representing an ideal performance based on theoretical limits of the tested parameters (hashrate, temperature, and efficiency).
 
 Ranking of Results: After the tests are complete, I implemented a ranking function based on the average hashrate, temperature, and efficiency. 
 The top 5 configurations are extracted and displayed based on their normalized score. The ranking is done by sorting the results by average hashrate (from highest to lowest), making it easier to identify the best-performing configurations.
