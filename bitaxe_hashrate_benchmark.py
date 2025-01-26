@@ -46,7 +46,7 @@ max_vr_temp = 90  # Maximum allowed voltage regulator temperature
 # Global variables for score calculation
 min_temp = 25  # Minimum acceptable temperature
 min_hashrate = 0  # Theoretical minimum hashrate
-max_hashrate = 2500  # Theoretical maximum hashrate
+max_hashrate = 2000  # Theoretical maximum hashrate
 min_efficiency = 10  # Minimum efficiency
 max_efficiency = 100  # Maximum efficiency
 
