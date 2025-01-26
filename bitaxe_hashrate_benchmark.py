@@ -45,7 +45,7 @@ max_vr_temp = 90  # Maximum allowed voltage regulator temperature
 
 # Global variables for score calculation
 min_temp = 25  # Minimum acceptable temperature
-min_hashrate = 0  # Theoretical minimum hashrate
+min_hashrate = 1  # Theoretical minimum hashrate
 max_hashrate = 2500  # Theoretical maximum hashrate
 min_efficiency = 10  # Minimum efficiency
 max_efficiency = 100  # Maximum efficiency
@@ -174,30 +174,30 @@ def benchmark_iteration(core_voltage, frequency):
         info = get_system_info()
         if info is None:
             print(YELLOW + "Skipping this iteration due to failure in fetching system info." + RESET)
-            return None, None, None, False
+            return None, None, None, False, None
         
         temp = info.get("temp")
         vr_temp = info.get("vrTemp")  # Get VR temperature if available
         
         if temp is None:
             print(YELLOW + "Temperature data not available." + RESET)
-            return None, None, None, False
+            return None, None, None, False, None
         
         # Check both chip and VR temperatures
         if temp >= max_temp:
             print(RED + f"Chip temperature exceeded {max_temp}°C! Stopping current benchmark." + RESET)
-            return None, None, None, False
+            return None, None, None, False, None
             
         if vr_temp is not None and vr_temp >= max_vr_temp:
             print(RED + f"Voltage regulator temperature exceeded {max_vr_temp}°C! Stopping current benchmark." + RESET)
-            return None, None, None, False
+            return None, None, None, False, None
         
         hash_rate = info.get("hashRate")
         power_consumption = info.get("power")
         
         if hash_rate is None or power_consumption is None:
             print(YELLOW + "Hashrate or Watts data not available." + RESET)
-            return None, None, None, False
+            return None, None, None, False, None
         
         hash_rates.append(hash_rate)
         temperatures.append(temp)
@@ -233,9 +233,10 @@ def benchmark_iteration(core_voltage, frequency):
         # Add protection against zero hashrate
         if average_hashrate > 0:
             efficiency_jth = average_power / (average_hashrate / 1_000)
+            
         else:
             print(RED + "Warning: Zero hashrate detected, skipping efficiency calculation" + RESET)
-            return None, None, None, False
+            return None, False 
         
         # Calculate if hashrate is within 8% of expected
         hashrate_within_tolerance = (average_hashrate >= expected_hashrate * 0.92)
@@ -246,20 +247,17 @@ def benchmark_iteration(core_voltage, frequency):
         # Apply scaling to normalize the score to 1000
         normalized_score = score / (max_hashrate * 10 + max_temp * 2 + max_efficiency * 0.5) * 1000  
         
-              
         print(GREEN + f"Average Hashrate: {average_hashrate:.2f} GH/s (Expected: {expected_hashrate:.2f} GH/s)" + RESET)
         print(GREEN + f"Average Temperature: {average_temperature:.2f}°C" + RESET)
         print(GREEN + f"Efficiency: {efficiency_jth:.2f} J/TH" + RESET)
         print(GREEN + f"Score: {normalized_score:.2f}/1000" + RESET)
 
-        
-
-
-        
-        return average_hashrate, average_temperature, efficiency_jth, hashrate_within_tolerance, score
+        return average_hashrate, average_temperature, efficiency_jth, hashrate_within_tolerance, normalized_score
     else:
         print(YELLOW + "No Hashrate or Temperature or Watts data collected." + RESET)
         return None, None, None, False, None
+
+
 
 def save_results():
     try:
@@ -305,7 +303,7 @@ try:
     
     while current_voltage <= max_allowed_voltage and current_frequency <= max_allowed_frequency:
         set_system_settings(current_voltage, current_frequency)
-        avg_hashrate, avg_temp, efficiency_jth, hashrate_ok, score = benchmark_iteration(current_voltage, current_frequency)
+        avg_hashrate, avg_temp, efficiency_jth, hashrate_ok, normalized_score = benchmark_iteration(current_voltage, current_frequency)
         
         if avg_hashrate is not None and avg_temp is not None and efficiency_jth is not None:
             results.append({
@@ -314,7 +312,7 @@ try:
                 "averageHashRate": avg_hashrate,
                 "averageTemperature": avg_temp,
                 "efficiencyJTH": efficiency_jth,
-                "score": score
+                "score": normalized_score
             })
             
             if hashrate_ok:
@@ -374,7 +372,8 @@ finally:
                     "frequency": result["frequency"],
                     "averageHashRate": result["averageHashRate"],
                     "averageTemperature": result["averageTemperature"],
-                    "efficiencyJTH": result["efficiencyJTH"]
+                    "efficiencyJTH": result["efficiencyJTH"],
+                    "score": result["normalized_score"]
                 }
                 for i, result in enumerate(top_5_results, 1)
             ]
@@ -396,7 +395,7 @@ finally:
                 print(GREEN + f"  Average Hashrate: {result['averageHashRate']:.2f} GH/s" + RESET)
                 print(GREEN + f"  Average Temperature: {result['averageTemperature']:.2f}°C" + RESET)
                 print(GREEN + f"  Efficiency: {result['efficiencyJTH']:.2f} J/TH" + RESET)
-                print(GREEN + f"  Score: {result['score']:.2f}" + RESET)
+                print(GREEN + f"  Score: {result['normalized_score']:.2f}" + RESET)
         else:
             print(RED + "No valid results were found during benchmarking." + RESET)
 
