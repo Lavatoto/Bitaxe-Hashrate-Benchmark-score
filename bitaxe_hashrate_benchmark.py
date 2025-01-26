@@ -250,7 +250,7 @@ def benchmark_iteration(core_voltage, frequency):
         print(GREEN + f"Average Hashrate: {average_hashrate:.2f} GH/s (Expected: {expected_hashrate:.2f} GH/s)" + RESET)
         print(GREEN + f"Average Temperature: {average_temperature:.2f}°C" + RESET)
         print(GREEN + f"Efficiency: {efficiency_jth:.2f} J/TH" + RESET)
-        print(GREEN + f"Normalized Score: {normalized_score:.2f}/1000" + RESET)
+        print(GREEN + f"Score: {normalized_score:.2f}/1000" + RESET)
 
         
 
